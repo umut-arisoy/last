@@ -8,7 +8,6 @@ fi
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 BACKUP_FILE="/etc/pf.conf.backup.$TIMESTAMP"
 cp /etc/pf.conf "$BACKUP_FILE"
-echo " /etc/pf.conf dosyası yedeklendi: $BACKUP_FILE"
 
 # Geçici dosyalar
 MODIFIED_FILE=$(mktemp)
@@ -20,6 +19,8 @@ ANCHOR_LOAD_LINE='load anchor "com.apple" from "/etc/pf.anchors/com.apple"'
 # Satırları işle
 awk -v scrub_line='scrub in all' \
     -v passout_line='pass out all keep state' \
+    -v passout_line='set skip on lo0' \
+    -v passout_line='block drop in proto udp from any to any port 5353' \
     -v scrub_anchor="$SCRUB_ANCHOR_LINE" \
     -v anchor_load="$ANCHOR_LOAD_LINE" '
 {
@@ -43,18 +44,14 @@ mv "$MODIFIED_FILE" /etc/pf.conf
 # pf.conf'u yeniden yükle
 pfctl -f /etc/pf.conf
 if [ $? -eq 0 ]; then
-  echo " pf.conf başarıyla yüklendi."
 else
-  echo " Hata! Geri almak için: sudo cp $BACKUP_FILE /etc/pf.conf && sudo pfctl -f /etc/pf.conf"
   exit 2
 fi
 
 # pf servisini etkinleştir
 pfctl -e 2>/dev/null
 if [ $? -eq 0 ]; then
-  echo " pf servisi etkinleştirildi."
 else
-  echo " pf zaten aktif olabilir, sorun yok."
 fi
 
 # Mevcut kuralları göster
