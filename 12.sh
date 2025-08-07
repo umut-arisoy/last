@@ -44,14 +44,12 @@ mv "$MODIFIED_FILE" /etc/pf.conf
 # pf.conf'u yeniden yükle
 pfctl -f /etc/pf.conf
 if [ $? -eq 0 ]; then
-else
   exit 2
 fi
 
 # pf servisini etkinleştir
 pfctl -e 2>/dev/null
 if [ $? -eq 0 ]; then
-else
 fi
 
 # Mevcut kuralları göster
